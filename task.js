@@ -1,12 +1,152 @@
-(function() {
+(function () {
+    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+
+    function Calendar(year, month) {
+        this.date = new Date(year, month);
+        this.wrapper = null;
+        this.generateDOMInterface();
+    }
+    Calendar.prototype.nextMonth = function () {
+        this.date.setMonth(this.date.getMonth() + 1);
+    }
+
+    Calendar.prototype.previousMonth = function () {
+        this.date.setMonth(this.date.getMonth() - 1);
+    }
+
+    Calendar.prototype.nextYear = function () {
+        this.date.setFullYear(this.date.getFullYear() + 1);
+    }
+
+    Calendar.prototype.previousYear = function () {
+        this.date.setFullYear(this.date.getFullYear() - 1);
+    }
+
+
+    Calendar.prototype.generateDOMInterface = function () {
+        if (this.wrapper) {
+            return this.wrapper;
+        }
+        this.wrapper = document.createElement('div');
+        let table = document.createElement('table');
+        this.wrapper.append(table);
+        table.append(this.generateControlPanel());
+        this.updateInterface();
+        return this.wrapper;
+    }
+
+    Calendar.prototype.generateControlPanel = function () {
+        let thead = document.createElement('thead');
+        let tr = document.createElement('tr');
+        thead.append(tr);
+        let _this = this;
+        tr.id = 'panel';
+        tr.innerHTML = `<td class="change_year"><button class="btn_year" id="prevyearBtn">&lt;&lt;</button></td><td class="change_month"><button class="btn_month" id="previousmonthBtn">&lt;</button></td><td colspan="3" id="display_month"><div id="descripMonth"></div><div id="descripYear"></div></td><td class="change_month"><button class="btn_month" id="nextmonthBtn">&gt;</button></td><td class="change_year"><button class="btn_year" id="nextyearBtn">&gt;&gt;</button></td>`;
+        tr.querySelector("#prevyearBtn").addEventListener("click", function () {
+            _this.previousYear();
+            _this.updateInterface();
+        });
+
+        tr.querySelector("#previousmonthBtn").addEventListener("click", function () {
+            _this.previousMonth();
+            _this.updateInterface();
+        });
+        tr.querySelector("#nextmonthBtn").addEventListener("click", function () {
+            _this.nextMonth();
+            _this.updateInterface();
+        });
+
+        tr.querySelector("#nextyearBtn").addEventListener("click", function () {
+            _this.nextYear();
+            _this.updateInterface();
+        });
+        return thead;
+    }
+
+    Calendar.prototype.getDay = function (date) { // получить номер дня недели, от 0(пн) до 6(вс)
+        var day = date.getDay();
+        if (day == 0) { day = 7 };
+        return day - 1;
+    }
+
+
+    Calendar.prototype.generateCalendarPanel = function () {
+        let year = this.date.getYear();
+        let next_month = this.date.getMonth() + 1;
+        let previous_month = this.date.getMonth();
+        let date = new Date(this.date.getFullYear(), this.date.getMonth());
+        let datenextMonth = new Date(year, next_month);
+        let datepreviousMonth = new Date(year, previous_month, 0);
+
+        datepreviousMonth.setDate(datepreviousMonth.getDate() - this.getDay(date));
+
+        let table = '<tr>';
+
+        // ячейки предыд месяца
+        for (let i = 0; i < this.getDay(date); i++) {
+            datepreviousMonth.setDate(datepreviousMonth.getDate() + 1);
+            table += '<td id="Pmonth"> ' + datepreviousMonth.getDate() + '</td>';
+        }
+
+        // ячейки календаря с датами
+        while (date.getMonth() == this.date.getMonth()) {
+
+            if ((this.getDay(date) % 7 == 6) || (this.getDay(date) % 7 == 5)) {
+                table += '<td id="weekend">' + date.getDate() + '</td>';
+            } else {
+                table += '<td>' + date.getDate() + '</td>';
+            }
+            let newDate = new Date(date.getTime());
+            newDate.setDate(newDate.getDate() + 1);
+            let nextDayMonth = newDate.getMonth();
+            if (this.getDay(date) % 7 == 6 && nextDayMonth == this.date.getMonth()) { // вс, последний день - перевод строки
+                table += '</tr><tr>';
+            }
+            date.setDate(date.getDate() + 1);
+        }
+
+        // добить таблицу  ячейками след месяца
+        if (this.getDay(date) != 0) {
+            for (let i = this.getDay(date); i < 7; i++) {
+                table += '<td id="Nmonth">' + datenextMonth.getDate() + '</td>';
+                datenextMonth.setDate(datenextMonth.getDate() + 1);
+            }
+        }
+
+        table += '</tr>';
+        let tbody = document.createElement("tbody");
+        tbody.innerHTML = table;
+        return tbody;
+    }
+
+    Calendar.prototype.updateInterface = function () {
+        let table = this.wrapper.querySelector("table");
+        let tbody = table.querySelector('tbody');
+        if (tbody) {
+            tbody.remove();
+        }
+        tbody = this.generateCalendarPanel();
+        table.append(tbody);
+        console.log(this.date);
+        table.querySelector("#descripMonth").innerText = monthNames[this.date.getMonth()];
+        table.querySelector("#descripYear").innerText = `${this.date.getFullYear()} год`;
+
+    }
+
+    let calendar = new Calendar(2018, 11);
+    document.body.append(calendar.generateDOMInterface());
+
+
     var header = document.getElementById("header");
     var DivMonth = document.createElement('div');
     DivMonth.id = "fieldMonth";
     header.appendChild(DivMonth);
 
-    var monthNames = ["Выбрать месяц", "Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
-        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
-    ];
+    // var monthNames = ["Выбрать месяц", "Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
+    //     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    // ];
     var strMonth = '<label for="month">Месяц</label><select name="month" id="monthId" class="select-field">';
     for (var i = 0; i < monthNames.length; i++) {
         strMonth += `<option value = "${i}">${monthNames[i]}</option>`;
@@ -108,9 +248,9 @@
 
         var date = new Date(year, _month);
 
-        const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
-            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
-        ];
+        // const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
+        //     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        // ];
 
         var div = document.getElementById(`${count}`);
         var ButtonPanel = document.createElement('tr');
@@ -205,7 +345,7 @@
         }
 
         function yearNextClicks() {
-            var updater = function() {
+            var updater = function () {
                 return {
                     getYear: () => year,
                     nextYear: () => ++year
@@ -215,7 +355,7 @@
             var update = updater();
             // createCalendar(`${count}`, _month, update.getYear());
 
-            nextyearBtn.addEventListener('click', function() {
+            nextyearBtn.addEventListener('click', function () {
                 update.nextYear();
                 var yeardescription = document.getElementById("descripYear");
                 yeardescription.innerHTML = `${update.getYear()} год`;
@@ -224,7 +364,7 @@
         }
 
         function yearPreviousClicks() {
-            var updater = function() {
+            var updater = function () {
                 return {
                     getYear: () => year,
                     prevYear: () => --year
@@ -234,7 +374,7 @@
             var update = updater();
             // createCalendar(`${count}`, _month, update.getYear());
 
-            prevyearBtn.addEventListener('click', function() {
+            prevyearBtn.addEventListener('click', function () {
                 update.prevYear();
                 var yeardescription = document.getElementById("descripYear");
                 yeardescription.innerHTML = `${update.getYear()} год`;
@@ -243,7 +383,7 @@
         }
 
         function monthNextClicks() {
-            var updater = function() {
+            var updater = function () {
                 return {
                     getMonth: () => _month,
                     nextMonth: () => {
@@ -259,7 +399,7 @@
 
             var nextmonthBtn = document.getElementById("nextmonthBtn");
             let update = updater();
-            nextmonthBtn.addEventListener('click', function() {
+            nextmonthBtn.addEventListener('click', function () {
                 update.nextMonth();
                 // createCalendar(`${count}`, `${update.getMonth()}`, year);
                 var monthdescription = document.getElementById("descripMonth");
@@ -271,7 +411,7 @@
         }
 
         function monthPreviousClicks() {
-            var updater = function() {
+            var updater = function () {
                 return {
                     getMonth: () => _month,
                     prevMonth: () => {
@@ -287,7 +427,7 @@
             }
             var previousmonthBtn = document.getElementById("previousmonthBtn");
             let update = updater();
-            previousmonthBtn.addEventListener('click', function() {
+            previousmonthBtn.addEventListener('click', function () {
                 update.prevMonth();
                 // createCalendar(`${count}`, `${update.getMonth()}`, year);
                 var monthdescription = document.getElementById("descripMonth");
@@ -302,7 +442,7 @@
             var selectedTd;
             var calendarTable = document.getElementById(`${count}`);
 
-            calendarTable.addEventListener('click', function(event) {
+            calendarTable.addEventListener('click', function (event) {
                 var target = event.target;
                 if (target.tagName != 'TD') return;
                 highlight(target);
