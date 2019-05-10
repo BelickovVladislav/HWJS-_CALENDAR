@@ -3,6 +3,8 @@
         "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
     ];
 
+    const calendares = [];
+
     function Calendar(year, month) {
         this.date = new Date(year, month);
         this.wrapper = null;
@@ -135,8 +137,11 @@
 
     }
 
-    let calendar = new Calendar(2018, 11);
-    document.body.append(calendar.generateDOMInterface());
+    Calendar.prototype.remove = function () {
+        this.wrapper.remove();
+    }
+    // let calendar = new Calendar(2018, 11);
+    // document.body.append(calendar.generateDOMInterface());
 
 
     var header = document.getElementById("header");
@@ -147,8 +152,9 @@
     // var monthNames = ["Выбрать месяц", "Январь", "Февраль", "Март", "Апрель", "Maй", "Июнь",
     //     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
     // ];
+    let names = ["Выбрать месяц", ...monthNames];
     var strMonth = '<label for="month">Месяц</label><select name="month" id="monthId" class="select-field">';
-    for (var i = 0; i < monthNames.length; i++) {
+    for (var i = 0; i < names.length; i++) {
         strMonth += `<option value = "${i}">${monthNames[i]}</option>`;
     }
     strMonth += '</select>';
@@ -224,8 +230,9 @@
 
         console.log(_month)
         console.log(year)
-
-        wraperCalendar = document.createElement('div');
+        let calendar = new Calendar(year, _month);
+        calendares.push(calendar);
+        wraperCalendar = calendar.generateDOMInterface();
         var section = document.getElementById("section");
         count = count + 1;
         console.log(count);
@@ -233,15 +240,15 @@
         section.appendChild(wraperCalendar);
         wraperCalendar.style.cssText = "display:flex;flex-direction: column;justify-content: center;align-items: center;height: 500px;width: 100%;"
 
-        GenerateCalendar(`${count}`, _month, year);
+        // GenerateCalendar(`${count}`, _month, year);
     }
 
     ButtonRemoveCalend.addEventListener('click', RemoveCalendar);
 
     function RemoveCalendar() {
-        count = count + 1;
-        var section = document.getElementById("section");
-        section.removeChild(section.children[0]);
+        if (calendares.length) {
+            calendares.shift().remove();
+        }
     }
 
     function GenerateCalendar(id, _month, year) {
